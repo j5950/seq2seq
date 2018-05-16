@@ -50,9 +50,9 @@ def get_data(data_name,multi_language=False,embedding_size=300,src='.de',trg='.e
    tokenizer = data.get_tokenizer(tokenizer_name) # $$ need to modify this part -> make more flexible  
    
    src_lang_text = data.Field(tokenize = tokenizer,init_token=sos_token,eos_token=eos_token,\
-                        use_vocab = use_vocab,lower=lower,batch_first=batch_first)   
+                        use_vocab = use_vocab,lower=lower,batch_first=batch_first, include_lengths=True)
    trg_lang_text = data.Field(tokenize = tokenizer,init_token=sos_token,eos_token=eos_token,\
-                        use_vocab = use_vocab,lower=lower,batch_first=batch_first)
+                        use_vocab = use_vocab,lower=lower,batch_first=batch_first, include_lengths=True)
    torch_text_preload = ['WMT14DE','IWSLT','multi30k']
    print ("[+] Get the data")
    # torchtext library supported only de - english dataset. 
@@ -100,19 +100,26 @@ def get_data(data_name,multi_language=False,embedding_size=300,src='.de',trg='.e
    
    emb_dims = src_lang_text.vocab.vectors.size()[1]
    std = 1.0/np.sqrt(emb_dims)
+
    if multi_language:
-      value = np.random.normal(0,scale =std ,size=[2,emb_dims]) 
-      value = torch.from_numpy(value)
-      src_lang_text.vocab.vectors[1:3] = value
-      trg_lang_text.vocab.vectors[1:3] = value
-   else:
-      value1 = np.random.normal(0,scale =std ,size=[3,emb_dims])          
+      value1 = np.random.normal(0,scale =std ,size=[3,emb_dims])
+      value1 = torch.from_numpy(value1)
       value2 = np.random.normal(0,scale =std ,size=[3,emb_dims])
+      value2 = torch.from_numpy(value2)
+      src_lang_text.vocab.vectors[0:3] = value1
+      src_lang_text.vocab.vectors[1].zero_()
+      trg_lang_text.vocab.vectors[0:3] = value2
+      trg_lang_text.vocab.vectors[1].zero_()
+   else:
+      value1 = np.random.normal(0,scale =std ,size=[4,emb_dims])
+      value2 = np.random.normal(0,scale =std ,size=[4,emb_dims])
       value1 = torch.from_numpy(value1)
       value2 = torch.from_numpy(value2)
    
-      src_lang_text.vocab.vectors[1:4] = value1
-      trg_lang_text.vocab.vectors[1:4] = value2
+      src_lang_text.vocab.vectors[0:4] = value1
+      src_lang_text.vocab.vectors[1].zero_()
+      trg_lang_text.vocab.vectors[0:4] = value2
+      trg_lang_text.vocab.vectors[1].zero_()
 
    src_vocab = src_lang_text.vocab
    trg_vocab = trg_lang_text.vocab
